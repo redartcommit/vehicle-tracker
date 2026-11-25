@@ -8,7 +8,16 @@ from .models import Reading
 from .store import InMemoryStore
 
 app = FastAPI(title="Sammy Telemetry API", version="0.1.0")
-store = InMemoryStore()
+
+def make_store():
+    # On Lambda, Terraform sets STORE_DB=dynamo plus the table names. Locally and in tests, use memory.
+    if os.environ.get("STORE_DB") == "dynamo":
+        from .dynamo_store import DynamoStore
+        return DynamoStore(os.environ["TELEMATICS_TABLE"], os.environ["DEVICES_TABLE"])
+    return InMemoryStore()
+
+store = make_store()
+
 
 
 def hash_key(key: str) -> str:
@@ -38,8 +47,8 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/telemetry", status_code=202)
-def post_telemetry(
+@app.post("/telematics", status_code=202)
+def post_telematics(
     body: Reading | list[Reading],
     x_device_key: str | None = Header(default=None),
 ):

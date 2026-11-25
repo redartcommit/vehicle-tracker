@@ -3,8 +3,10 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .env
+build/
 # Terraform
 infra/.terraform/
 *.tfstate
 *.tfstate.*
 *.zip
+*.tfvars

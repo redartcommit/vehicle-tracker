@@ -22,13 +22,13 @@ def test_health():
 
 
 def test_rejects_missing_or_bad_key():
-    assert client.post("/telemetry", json=reading()).status_code == 401
+    assert client.post("/telematics", json=reading()).status_code == 401
     bad = {"X-Device-Key": "wrong"}
-    assert client.post("/telemetry", json=reading(), headers=bad).status_code == 401
+    assert client.post("/telematics", json=reading(), headers=bad).status_code == 401
 
 
 def test_single_reading_then_location():
-    r = client.post("/telemetry", json=reading(speed_mph=35), headers=KEY)
+    r = client.post("/telematics", json=reading(speed_mph=35), headers=KEY)
     assert r.status_code == 202
     loc = client.get("/vehicles/car1/location").json()["data"]["location"]
     assert loc["latitude"] == 27.95 and loc["speedMph"] == 35
@@ -36,19 +36,19 @@ def test_single_reading_then_location():
 
 def test_batch_returns_latest():
     batch = [reading("2026-11-23T12:00:00Z"), reading("2026-11-23T12:05:00Z", lat=28.0)]
-    r = client.post("/telemetry", json=batch, headers=KEY)
+    r = client.post("/telematics", json=batch, headers=KEY)
     assert r.json() == {"accepted": 2}
     loc = client.get("/vehicles/car1/location").json()["data"]["location"]
     assert loc["latitude"] == 28.0
 
 
 def test_cannot_post_for_another_device():
-    r = client.post("/telemetry", json=reading(device_id="car2"), headers=KEY)
+    r = client.post("/telematics", json=reading(device_id="car2"), headers=KEY)
     assert r.status_code == 403
 
 
 def test_faults_and_unknown_vehicle():
-    client.post("/telemetry", json=reading(fault_codes=["P0301"]), headers=KEY)
+    client.post("/telematics", json=reading(fault_codes=["P0301"]), headers=KEY)
     faults = client.get("/vehicles/car1/faults").json()["data"]["faults"]
     assert faults[0]["codes"] == ["P0301"]
     assert client.get("/vehicles/nope/location").status_code == 404
